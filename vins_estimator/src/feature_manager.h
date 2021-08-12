@@ -5,9 +5,11 @@
 #include <algorithm>
 #include <vector>
 #include <numeric>
+
 using namespace std;
 
 #include <eigen3/Eigen/Dense>
+
 using namespace Eigen;
 
 #include <ros/console.h>
@@ -15,18 +17,18 @@ using namespace Eigen;
 
 #include "parameters.h"
 #include "utility/line_geometry.h"
+
 extern Vector2d image_uv1;
-class FeaturePerFrame
-{
-  public:
-    FeaturePerFrame(const Vector3d &_point)
-    {
+
+class FeaturePerFrame {
+public:
+    FeaturePerFrame(const Vector3d &_point) {
         point.x() = _point(0);
         point.y() = _point(1);
         point.z() = _point(2);
     }
-    FeaturePerFrame(const Eigen::Matrix<double, 5, 1> &_point)
-    {
+
+    FeaturePerFrame(const Eigen::Matrix<double, 5, 1> &_point) {
         point.x() = _point(0);
         point.y() = _point(1);
         point.z() = _point(2);
@@ -34,6 +36,7 @@ class FeaturePerFrame
         uv.y() = _point(4);
         // std::cout<<"00000000 = "<<uv<<std::endl;
     }
+
     Vector3d point;
     Vector2d uv;
     double z;
@@ -45,15 +48,14 @@ class FeaturePerFrame
 };
 
 
-class FeaturePerId
-{
-  public:
+class FeaturePerId {
+public:
     const int feature_id;
     int start_frame;
-    
+
     //  feature_per_frame 是个向量容器，存着这个特征在每一帧上的观测量。 
     //                    如：feature_per_frame[0]，存的是ft在start_frame上的观测值; feature_per_frame[1]存的是start_frame+1上的观测
-    vector<FeaturePerFrame> feature_per_frame;
+    vector <FeaturePerFrame> feature_per_frame;
 
     int used_num;
     bool is_outlier;
@@ -64,27 +66,25 @@ class FeaturePerId
     Vector3d gt_p;
 
     FeaturePerId(int _feature_id, int _start_frame)
-        : feature_id(_feature_id), start_frame(_start_frame),
-          used_num(0), estimated_depth(-1.0), solve_flag(0)
-    {
+            : feature_id(_feature_id), start_frame(_start_frame),
+              used_num(0), estimated_depth(-1.0), solve_flag(0) {
 
     }
 
     int endFrame();
 };
 
-class lineFeaturePerFrame
-{
+class lineFeaturePerFrame {
 public:
-    lineFeaturePerFrame(const Vector4d &line)
-    {
+    lineFeaturePerFrame(const Vector4d &line) {
         lineobs = line;
     }
-    lineFeaturePerFrame(const Vector8d &line)
-    {
+
+    lineFeaturePerFrame(const Vector8d &line) {
         lineobs = line.head<4>();
         lineobs_R = line.tail<4>();
     }
+
     Vector4d lineobs;   // 每一帧上的观测
     Vector4d lineobs_R;
     double z;
@@ -94,15 +94,15 @@ public:
     VectorXd b;
     double dep_gradient;
 };
-class lineFeaturePerId
-{
+
+class lineFeaturePerId {
 public:
     const int feature_id;
     int start_frame;
 
     //  feature_per_frame 是个向量容器，存着这个特征在每一帧上的观测量。
     //                    如：feature_per_frame[0]，存的是ft在start_frame上的观测值; feature_per_frame[1]存的是start_frame+1上的观测
-    vector<lineFeaturePerFrame> linefeature_per_frame;
+    vector <lineFeaturePerFrame> linefeature_per_frame;
 
     int used_num;
     bool is_outlier;
@@ -126,17 +126,16 @@ public:
 
     lineFeaturePerId(int _feature_id, int _start_frame)
             : feature_id(_feature_id), start_frame(_start_frame),
-              used_num(0), solve_flag(0),is_triangulation(false)
-    {
+              used_num(0), solve_flag(0), is_triangulation(false) {
         removed_cnt = 0;
         all_obs_cnt = 1;
     }
 
     int endFrame();
 };
-class FeatureManager
-{
-  public:
+
+class FeatureManager {
+public:
     FeatureManager(Matrix3d _Rs[]);
 
     void setRic(Matrix3d _ric[]);
@@ -144,45 +143,76 @@ class FeatureManager
     void clearState();
 
     int getFeatureCount();
+
     int getLineFeatureCount();
+
     MatrixXd getLineOrthVector(Vector3d Ps[], Vector3d tic[], Matrix3d ric[]);
-    void setLineOrth(MatrixXd x, Vector3d Ps[], Matrix3d Rs[],Vector3d tic[], Matrix3d ric[]);
+
+    void setLineOrth(MatrixXd x, Vector3d Ps[], Matrix3d Rs[], Vector3d tic[], Matrix3d ric[]);
+
     MatrixXd getLineOrthVectorInCamera();
+
     void setLineOrthInCamera(MatrixXd x);
 
-    double reprojection_error( Vector4d obs, Matrix3d Rwc, Vector3d twc, Vector6d line_w );
-    void removeLineOutlier(Vector3d Ps[], Vector3d tic[], Matrix3d ric[]);
-    void removeLineOutlier();
-    // mono point
-    bool addFeatureCheckParallax(int frame_count, const map<int, vector<pair<int, Vector3d>>> &image);
-    // mono line
-    
-    bool addFeatureCheckParallax(int frame_count, const map<int, vector<pair<int, Vector3d>>> &image, const map<int, vector<pair<int, Vector4d>>> &lines);
+    double reprojection_error(Vector4d obs, Matrix3d Rwc, Vector3d twc, Vector6d line_w);
 
-    bool addFeatureCheckParallax(int frame_count, const map<int, vector<pair<int, Matrix<double, 5, 1>>>> &image, const map<int, vector<pair<int, Vector4d>>> &lines);
+    void removeLineOutlier(Vector3d Ps[], Vector3d tic[], Matrix3d ric[]);
+
+    void removeLineOutlier();
+
+    // mono point
+    bool addFeatureCheckParallax(int frame_count, const map<int, vector<pair < int, Vector3d>>
+
+    > &image);
+    // mono line
+
+    bool addFeatureCheckParallax(int frame_count, const map<int, vector<pair < int, Vector3d>>
+
+    > &image, const map<int, vector<pair < int, Vector4d>>> &lines);
+
+    bool addFeatureCheckParallax(int frame_count, const map<int, vector<pair < int, Matrix < double, 5, 1>>
+
+    >> &image, const map<int, vector<pair < int, Vector4d>>> &lines);
+
     // stereo line
-    bool addFeatureCheckParallax(int frame_count, const map<int, vector<pair<int, Vector3d>>> &image, const map<int, vector<pair<int, Vector8d>>> &lines);
+    bool addFeatureCheckParallax(int frame_count, const map<int, vector<pair < int, Vector3d>>
+
+    > &image, const map<int, vector<pair < int, Vector8d>>> &lines);
+
     void debugShow();
-    vector<pair<Vector3d, Vector3d>> getCorresponding(int frame_count_l, int frame_count_r);
+
+    vector <pair<Vector3d, Vector3d>> getCorresponding(int frame_count_l, int frame_count_r);
 
     //void updateDepth(const VectorXd &x);
     void setDepth(const VectorXd &x);
+
     void removeFailures();
+
     void clearDepth(const VectorXd &x);
+
     VectorXd getDepthVector();
+
     void triangulate(Vector3d Ps[], Vector3d tic[], Matrix3d ric[]);
+
     void triangulateLine(Vector3d Ps[], Vector3d tic[], Matrix3d ric[]);
+
     void triangulateLine(double baseline);  // stereo line
-    void removeBackShiftDepth(Eigen::Matrix3d marg_R, Eigen::Vector3d marg_P, Eigen::Matrix3d new_R, Eigen::Vector3d new_P);
+    void
+    removeBackShiftDepth(Eigen::Matrix3d marg_R, Eigen::Vector3d marg_P, Eigen::Matrix3d new_R, Eigen::Vector3d new_P);
+
     void removeBack();
+
     void removeFront(int frame_count);
+
     void removeOutlier();
-    list<FeaturePerId> feature;
-    list<lineFeaturePerId> linefeature;
+
+    list <FeaturePerId> feature;
+    list <lineFeaturePerId> linefeature;
     int last_track_num;
 
-  private:
+private:
     double compensatedParallax2(const FeaturePerId &it_per_id, int frame_count);
+
     const Matrix3d *Rs;
     Matrix3d ric[NUM_OF_CAM];
 };

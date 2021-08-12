@@ -7,8 +7,8 @@ double MIN_PARALLAX;
 double ACC_N, ACC_W;
 double GYR_N, GYR_W;
 
-std::vector<Eigen::Matrix3d> RIC;
-std::vector<Eigen::Vector3d> TIC;
+std::vector <Eigen::Matrix3d> RIC;
+std::vector <Eigen::Vector3d> TIC;
 
 Eigen::Vector3d G{0.0, 0.0, 9.8};
 
@@ -30,29 +30,23 @@ int IMAGE_ROW, IMAGE_COL;
 std::string VINS_FOLDER_PATH;
 int MAX_KEYFRAME_NUM;
 
-template <typename T>
-T readParam(ros::NodeHandle &n, std::string name)
-{
+template<typename T>
+T readParam(ros::NodeHandle &n, std::string name) {
     T ans;
-    if (n.getParam(name, ans))
-    {
+    if (n.getParam(name, ans)) {
         ROS_INFO_STREAM("Loaded " << name << ": " << ans);
-    }
-    else
-    {
+    } else {
         ROS_ERROR_STREAM("Failed to load " << name);
         n.shutdown();
     }
     return ans;
 }
 
-void readParameters(ros::NodeHandle &n)
-{
+void readParameters(ros::NodeHandle &n) {
     std::string config_file;
     config_file = readParam<std::string>(n, "config_file");
     cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
-    if(!fsSettings.isOpened())
-    {
+    if (!fsSettings.isOpened()) {
         std::cerr << "ERROR: Wrong path to settings" << std::endl;
     }
 
@@ -82,19 +76,15 @@ void readParameters(ros::NodeHandle &n)
     G.z() = fsSettings["g_norm"];
 
     ESTIMATE_EXTRINSIC = fsSettings["estimate_extrinsic"];
-    if (ESTIMATE_EXTRINSIC == 2)
-    {
+    if (ESTIMATE_EXTRINSIC == 2) {
         ROS_WARN("have no prior about extrinsic param, calibrate extrinsic param");
         RIC.push_back(Eigen::Matrix3d::Identity());
         TIC.push_back(Eigen::Vector3d::Zero());
         fsSettings["ex_calib_result_path"] >> EX_CALIB_RESULT_PATH;
         EX_CALIB_RESULT_PATH = VINS_FOLDER_PATH + EX_CALIB_RESULT_PATH;
 
-    }
-    else 
-    {
-        if ( ESTIMATE_EXTRINSIC == 1)
-        {
+    } else {
+        if (ESTIMATE_EXTRINSIC == 1) {
             ROS_WARN(" Optimize extrinsic param around initial guess!");
             fsSettings["ex_calib_result_path"] >> EX_CALIB_RESULT_PATH;
             EX_CALIB_RESULT_PATH = VINS_FOLDER_PATH + EX_CALIB_RESULT_PATH;
@@ -115,12 +105,11 @@ void readParameters(ros::NodeHandle &n)
         TIC.push_back(eigen_T);
         ROS_INFO_STREAM("Extrinsic_R : " << std::endl << RIC[0]);
         ROS_INFO_STREAM("Extrinsic_T : " << std::endl << TIC[0].transpose());
-        
-    } 
+
+    }
 
     LOOP_CLOSURE = fsSettings["loop_closure"];
-    if (LOOP_CLOSURE == 1)
-    {
+    if (LOOP_CLOSURE == 1) {
         fsSettings["voc_file"] >> VOC_FILE;;
         fsSettings["pattern_file"] >> PATTERN_FILE;
         VOC_FILE = VINS_FOLDER_PATH + VOC_FILE;
@@ -137,7 +126,7 @@ void readParameters(ros::NodeHandle &n)
     if (!fsSettings["model_type"].isNone())
         BASE_LINE = static_cast<double>(fsSettings["base_line"]);
     else
-        BASE_LINE = - 1.0;
+        BASE_LINE = -1.0;
 
     fsSettings.release();
 }

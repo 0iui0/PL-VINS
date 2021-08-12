@@ -14,26 +14,21 @@ using namespace Eigen;
 const int SKIP = 50;
 string benchmark_output_path;
 string estimate_output_path;
-template <typename T>
-T readParam(ros::NodeHandle &n, std::string name)
-{
+
+template<typename T>
+T readParam(ros::NodeHandle &n, std::string name) {
     T ans;
-    if (n.getParam(name, ans))
-    {
+    if (n.getParam(name, ans)) {
         ROS_INFO_STREAM("Loaded " << name << ": " << ans);
-    }
-    else
-    {
+    } else {
         ROS_ERROR_STREAM("Failed to load " << name);
         n.shutdown();
     }
     return ans;
 }
 
-struct Data
-{
-    Data(FILE *f)
-    {
+struct Data {
+    Data(FILE *f) {
         fscanf(f, " %lf,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f", &t,
                &px, &py, &pz,
                &qw, &qx, &qy, &qz,
@@ -42,6 +37,7 @@ struct Data
                &ax, &ay, &az);
         t /= 1e9;
     }
+
     double t;
     float px, py, pz;
     float qw, qx, qy, qz;
@@ -49,8 +45,9 @@ struct Data
     float wx, wy, wz;
     float ax, ay, az;
 };
+
 int idx = 1;
-vector<Data> benchmark;
+vector <Data> benchmark;
 
 ros::Publisher pub_odom;
 ros::Publisher pub_path;
@@ -61,18 +58,15 @@ Quaterniond baseRgt;
 Vector3d baseTgt;
 tf::Transform trans;
 
-void odom_callback(const nav_msgs::OdometryConstPtr &odom_msg)
-{
+void odom_callback(const nav_msgs::OdometryConstPtr &odom_msg) {
     //ROS_INFO("odom callback!");
     if (odom_msg->header.stamp.toSec() > benchmark.back().t)
-      return;
-  
-    for (; idx < static_cast<int>(benchmark.size()) && benchmark[idx].t <= odom_msg->header.stamp.toSec(); idx++)
-        ;
+        return;
+
+    for (; idx < static_cast<int>(benchmark.size()) && benchmark[idx].t <= odom_msg->header.stamp.toSec(); idx++);
 
 
-    if (init++ < SKIP)
-    {
+    if (init++ < SKIP) {
         baseRgt = Quaterniond(odom_msg->pose.pose.orientation.w,
                               odom_msg->pose.pose.orientation.x,
                               odom_msg->pose.pose.orientation.y,
@@ -123,19 +117,17 @@ void odom_callback(const nav_msgs::OdometryConstPtr &odom_msg)
     pub_path.publish(path);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     ros::init(argc, argv, "benchmark_publisher");
     ros::NodeHandle n("~");
 
     string csv_file = readParam<string>(n, "data_name");
     std::cout << "load ground truth " << csv_file << std::endl;
     FILE *f = fopen(csv_file.c_str(), "r");
-    if (f==NULL)
-    {
-      ROS_WARN("can't load ground truth; wrong path");
-      //std::cerr << "can't load ground truth; wrong path " << csv_file << std::endl;
-      return 0;
+    if (f == NULL) {
+        ROS_WARN("can't load ground truth; wrong path");
+        //std::cerr << "can't load ground truth; wrong path " << csv_file << std::endl;
+        return 0;
     }
     char tmp[10000];
     fgets(tmp, 10000, f);
@@ -143,13 +135,13 @@ int main(int argc, char **argv)
         benchmark.emplace_back(f);
     fclose(f);
     benchmark.pop_back();
-    ROS_INFO("Data loaded: %d", (int)benchmark.size());
+    ROS_INFO("Data loaded: %d", (int) benchmark.size());
 
     pub_odom = n.advertise<nav_msgs::Odometry>("odometry", 1000);
     pub_path = n.advertise<nav_msgs::Path>("path", 1000);
 
     ros::Subscriber sub_odom = n.subscribe("estimated_odometry", 1000, odom_callback);
-    
+
     ros::Rate r(20);
     ros::spin();
 }

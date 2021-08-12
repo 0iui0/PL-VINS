@@ -20,17 +20,17 @@
 
 Estimator estimator;
 
-queue<sensor_msgs::PointCloudConstPtr> relo_buf;
+queue <sensor_msgs::PointCloudConstPtr> relo_buf;
 
 std::condition_variable con;
 double current_time = -1;
-queue<sensor_msgs::ImuConstPtr> imu_buf;
-queue<sensor_msgs::PointCloudConstPtr> feature_buf;
-queue<sensor_msgs::PointCloudConstPtr> linefeature_buf;
+queue <sensor_msgs::ImuConstPtr> imu_buf;
+queue <sensor_msgs::PointCloudConstPtr> feature_buf;
+queue <sensor_msgs::PointCloudConstPtr> linefeature_buf;
 std::mutex m_posegraph_buf;
 queue<int> optimize_posegraph_buf;
-queue<KeyFrame*> keyframe_buf;
-queue<RetriveData> retrive_data_buf;
+queue<KeyFrame *> keyframe_buf;
+queue <RetriveData> retrive_data_buf;
 
 int sum_of_wait = 0;
 
@@ -52,7 +52,7 @@ Eigen::Vector3d tmp_Bg;
 Eigen::Vector3d acc_0;
 Eigen::Vector3d gyr_0;
 
-queue<pair<cv::Mat, double>> image_buf;
+queue <pair<cv::Mat, double>> image_buf;
 LoopClosure *loop_closure;
 KeyFrameDatabase keyframe_database;
 
@@ -68,8 +68,7 @@ Eigen::Matrix3d relocalize_r{Eigen::Matrix3d::Identity()};
 /*
   使用mid-point方法对imu状态量进行预测
 */
-void predict(const sensor_msgs::ImuConstPtr &imu_msg)
-{
+void predict(const sensor_msgs::ImuConstPtr &imu_msg) {
     double t = imu_msg->header.stamp.toSec();
     double dt = t - latest_time;
     latest_time = t;
@@ -100,8 +99,7 @@ void predict(const sensor_msgs::ImuConstPtr &imu_msg)
     gyr_0 = angular_velocity;
 }
 
-void update()
-{
+void update() {
     TicToc t_predict;
     latest_time = current_time;
     tmp_P = relocalize_r * estimator.Ps[WINDOW_SIZE] + relocalize_t;
@@ -112,25 +110,24 @@ void update()
     acc_0 = estimator.acc_0;
     gyr_0 = estimator.gyr_0;
 
-    queue<sensor_msgs::ImuConstPtr> tmp_imu_buf = imu_buf;
+    queue <sensor_msgs::ImuConstPtr> tmp_imu_buf = imu_buf;
     for (sensor_msgs::ImuConstPtr tmp_imu_msg; !tmp_imu_buf.empty(); tmp_imu_buf.pop())
         predict(tmp_imu_buf.front());
 
 }
 
-std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>,
-        std::pair<sensor_msgs::PointCloudConstPtr,sensor_msgs::PointCloudConstPtr> >>
-getMeasurements()
-{
-    std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>,
-            std::pair<sensor_msgs::PointCloudConstPtr,sensor_msgs::PointCloudConstPtr> >> measurements;
+std::vector <std::pair<std::vector < sensor_msgs::ImuConstPtr>,
+std::pair<sensor_msgs::PointCloudConstPtr, sensor_msgs::PointCloudConstPtr> >>
 
-    while (true)
-    {
+getMeasurements() {
+    std::vector < std::pair < std::vector < sensor_msgs::ImuConstPtr > ,
+            std::pair < sensor_msgs::PointCloudConstPtr, sensor_msgs::PointCloudConstPtr > >> measurements;
+
+    while (true) {
         if (imu_buf.empty() || feature_buf.empty() || linefeature_buf.empty())
             return measurements;
 
-        std::cout<<"-------------------------------------\n";
+        std::cout << "-------------------------------------\n";
 //        std::cout << imu_buf.front()->header.stamp.toSec() << " " << imu_buf.back()->header.stamp.toSec()<<" "<<imu_buf.size() << "\n";
 //        std::cout << feature_buf.front()->header.stamp.toSec() << " " << feature_buf.back()->header.stamp.toSec() << "\n";
         if (!(imu_buf.back()->header.stamp > feature_buf.front()->header.stamp)) //如果imu最新数据的时间戳不大于最旧图像的时间戳，那得等imu数据
@@ -153,27 +150,25 @@ getMeasurements()
         linefeature_buf.pop();
 
         // 遍历两个图像之间所有的imu数据
-        std::vector<sensor_msgs::ImuConstPtr> IMUs;
-        while (imu_buf.front()->header.stamp <= img_msg->header.stamp)
-        {
+        std::vector <sensor_msgs::ImuConstPtr> IMUs;
+        while (imu_buf.front()->header.stamp <= img_msg->header.stamp) {
             IMUs.emplace_back(imu_buf.front());
             imu_buf.pop();
         }
 //        std::cout << "measurements size: "<<measurements.size() <<"\n";
-        measurements.emplace_back(IMUs, std::make_pair(img_msg,linefeature_msg) );
+        measurements.emplace_back(IMUs, std::make_pair(img_msg, linefeature_msg));
     }
     return measurements;
 }
 
-void imu_callback(const sensor_msgs::ImuConstPtr &imu_msg)
-{
+void imu_callback(const sensor_msgs::ImuConstPtr &imu_msg) {
     m_buf.lock();
     imu_buf.push(imu_msg);
     m_buf.unlock();
     con.notify_one();
 
     {
-        std::lock_guard<std::mutex> lg(m_state);
+        std::lock_guard <std::mutex> lg(m_state);
         predict(imu_msg);
         std_msgs::Header header = imu_msg->header;
         header.frame_id = "world";
@@ -194,24 +189,21 @@ void imu_callback(const sensor_msgs::ImuConstPtr &imu_msg)
 //     }
 // }
 
-void feature_callback(const sensor_msgs::PointCloudConstPtr &feature_msg)
-{
+void feature_callback(const sensor_msgs::PointCloudConstPtr &feature_msg) {
     m_buf.lock();
     feature_buf.push(feature_msg);
     m_buf.unlock();
     con.notify_one();
 }
 
-void linefeature_callback(const sensor_msgs::PointCloudConstPtr &feature_msg)
-{
+void linefeature_callback(const sensor_msgs::PointCloudConstPtr &feature_msg) {
     m_buf.lock();
     linefeature_buf.push(feature_msg);
     m_buf.unlock();
     con.notify_one();
 }
 
-void send_imu(const sensor_msgs::ImuConstPtr &imu_msg)
-{
+void send_imu(const sensor_msgs::ImuConstPtr &imu_msg) {
     double t = imu_msg->header.stamp.toSec();
     if (current_time < 0)
         current_time = t;
@@ -233,8 +225,7 @@ void send_imu(const sensor_msgs::ImuConstPtr &imu_msg)
     estimator.processIMU(dt, Vector3d(dx, dy, dz), Vector3d(rx, ry, rz));
 }
 
-void relocalization_callback(const sensor_msgs::PointCloudConstPtr &points_msg)
-{
+void relocalization_callback(const sensor_msgs::PointCloudConstPtr &points_msg) {
     //printf("relocalization callback! \n");
     m_buf.lock();
     relo_buf.push(points_msg);
@@ -242,46 +233,41 @@ void relocalization_callback(const sensor_msgs::PointCloudConstPtr &points_msg)
 }
 
 // thread: visual-inertial odometry
-void process()
-{
-    while (true)
-    {
+void process() {
+    while (true) {
         //std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>, sensor_msgs::PointCloudConstPtr>> measurements;
-        std::vector<std::pair<std::vector<sensor_msgs::ImuConstPtr>,
-                std::pair<sensor_msgs::PointCloudConstPtr,sensor_msgs::PointCloudConstPtr> >> measurements;
-        std::unique_lock<std::mutex> lk(m_buf);
-        con.wait(lk, [&]
-                 {
+        std::vector < std::pair < std::vector < sensor_msgs::ImuConstPtr > ,
+                std::pair < sensor_msgs::PointCloudConstPtr, sensor_msgs::PointCloudConstPtr > >> measurements;
+        std::unique_lock <std::mutex> lk(m_buf);
+        con.wait(lk, [&] {
             return (measurements = getMeasurements()).size() != 0;
-                 });
+        });
         lk.unlock();
 
-        for (auto &measurement : measurements)
-        {
+        for (auto &measurement : measurements) {
             for (auto &imu_msg : measurement.first)
                 send_imu(imu_msg);                     // 处理imu数据, 预测 pose
 
             // set relocalization frame
             sensor_msgs::PointCloudConstPtr relo_msg = NULL;
-            while (!relo_buf.empty())
-            {
+            while (!relo_buf.empty()) {
                 relo_msg = relo_buf.front();
                 relo_buf.pop();
             }
-            if (relo_msg != NULL)
-            {
-                vector<Vector3d> match_points;
+            if (relo_msg != NULL) {
+                vector <Vector3d> match_points;
                 double frame_stamp = relo_msg->header.stamp.toSec();
-                for (unsigned int i = 0; i < relo_msg->points.size(); i++)
-                {
+                for (unsigned int i = 0; i < relo_msg->points.size(); i++) {
                     Vector3d u_v_id;
                     u_v_id.x() = relo_msg->points[i].x;
                     u_v_id.y() = relo_msg->points[i].y;
                     u_v_id.z() = relo_msg->points[i].z;
                     match_points.push_back(u_v_id);
                 }
-                Vector3d relo_t(relo_msg->channels[0].values[0], relo_msg->channels[0].values[1], relo_msg->channels[0].values[2]);
-                Quaterniond relo_q(relo_msg->channels[0].values[3], relo_msg->channels[0].values[4], relo_msg->channels[0].values[5], relo_msg->channels[0].values[6]);
+                Vector3d relo_t(relo_msg->channels[0].values[0], relo_msg->channels[0].values[1],
+                                relo_msg->channels[0].values[2]);
+                Quaterniond relo_q(relo_msg->channels[0].values[3], relo_msg->channels[0].values[4],
+                                   relo_msg->channels[0].values[5], relo_msg->channels[0].values[6]);
                 Matrix3d relo_r = relo_q.toRotationMatrix();
                 int frame_index;
                 frame_index = relo_msg->channels[0].values[7];
@@ -295,11 +281,10 @@ void process()
             ROS_DEBUG("processing vision data with stamp %f \n", img_msg->header.stamp.toSec());
 
             TicToc t_s;
-            map<int, vector<pair<int, Vector3d>>> image;
-            map<int, vector<pair<int, Vector4d>>> image1;
-            map<int, vector<pair<int, Matrix<double, 5, 1>>>> image2;
-            for (unsigned int i = 0; i < img_msg->points.size(); i++)
-            {
+            map < int, vector < pair < int, Vector3d>>> image;
+            map < int, vector < pair < int, Vector4d>>> image1;
+            map < int, vector < pair < int, Matrix < double, 5, 1 >> >> image2;
+            for (unsigned int i = 0; i < img_msg->points.size(); i++) {
                 int v = img_msg->channels[0].values[i] + 0.5;
                 int feature_id = v / NUM_OF_CAM;
                 int camera_id = v % NUM_OF_CAM;        // 被几号相机观测到的，如果是单目，camera_id = 0
@@ -332,9 +317,8 @@ void process()
             //     ROS_ASSERT(z == 1);
             //     image[feature_id].emplace_back(camera_id, xyz_uv);
             // }
-            map<int, vector<pair<int, Vector4d>>> lines;
-            for (unsigned int i = 0; i < line_msg->points.size(); i++)
-            {
+            map < int, vector < pair < int, Vector4d>>> lines;
+            for (unsigned int i = 0; i < line_msg->points.size(); i++) {
                 int v = line_msg->channels[0].values[i] + 0.5;
                 //std::cout<< "receive id: " << v / NUM_OF_CAM << "\n";
                 int feature_id = v / NUM_OF_CAM;
@@ -347,7 +331,7 @@ void process()
                 lines[feature_id].emplace_back(camera_id, Vector4d(x_startpoint, y_startpoint, x_endpoint, y_endpoint));
             }
             // estimator.processImage(image,lines, img_msg->header);   // 处理image数据，这时候的image已经是特征点数据，不是原始图像了。
-            estimator.processImage(image2,lines, img_msg->header);   // 处理image数据，这时候的image已经是特征点数据，不是原始图像了。
+            estimator.processImage(image2, lines, img_msg->header);   // 处理image数据，这时候的image已经是特征点数据，不是原始图像了。
 
             double whole_t = t_s.toc();
             printStatistics(estimator, whole_t);
@@ -379,8 +363,7 @@ void process()
     }
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     ros::init(argc, argv, "vins_estimator");
     ros::NodeHandle n("~");
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);

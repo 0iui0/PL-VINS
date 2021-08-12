@@ -43,7 +43,9 @@
 #if defined _MSC_VER && _MSC_VER <= 1700
 #include <stdint.h>
 #else
+
 #include <inttypes.h>
+
 #endif
 
 #ifndef __OPENCV_TYPES_HPP

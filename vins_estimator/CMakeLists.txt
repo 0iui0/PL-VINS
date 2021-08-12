@@ -7,14 +7,14 @@ set(CMAKE_CXX_FLAGS "-std=c++11")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g")
 
 find_package(catkin REQUIRED COMPONENTS
-    roscpp
-    std_msgs
-    geometry_msgs
-    nav_msgs
-    tf
-    cv_bridge
-    camera_model
-    )
+        roscpp
+        std_msgs
+        geometry_msgs
+        nav_msgs
+        tf
+        cv_bridge
+        camera_model
+        )
 
 find_package(OpenCV REQUIRED)
 
@@ -23,10 +23,10 @@ find_package(Ceres REQUIRED)
 include_directories(${catkin_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS})
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-find_package(Eigen3  REQUIRED)
+find_package(Eigen3 REQUIRED)
 include_directories(
-  ${catkin_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIR}
+        ${catkin_INCLUDE_DIRS}
+        ${EIGEN3_INCLUDE_DIR}
 )
 
 catkin_package()
@@ -67,7 +67,7 @@ LIST(APPEND SOURCEFILES
         src/factor/line_projection_factor.h
         src/factor/line_projection_factor.cpp
 
-)
+        )
 ADD_LIBRARY(vinsEstimatorLib SHARED ${SOURCEFILES})
 TARGET_LINK_LIBRARIES(vinsEstimatorLib ${catkin_LIBRARIES} ${OpenCV_LIBS} ${CERES_LIBRARIES})
 

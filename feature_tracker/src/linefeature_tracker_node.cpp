@@ -12,11 +12,11 @@
 
 #define SHOW_UNDISTORTION 0
 
-vector<uchar> r_status;
+vector <uchar> r_status;
 vector<float> r_err;
-queue<sensor_msgs::ImageConstPtr> img_buf;
+queue <sensor_msgs::ImageConstPtr> img_buf;
 
-ros::Publisher pub_img,pub_match;
+ros::Publisher pub_img, pub_match;
 
 LineFeatureTracker trackerData;
 double first_image_time;
@@ -25,39 +25,34 @@ bool first_image_flag = true;
 double frame_cnt = 0;
 double sum_time = 0.0;
 double mean_time = 0.0;
-void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
-{
-    if(first_image_flag)
-    {
+
+void img_callback(const sensor_msgs::ImageConstPtr &img_msg) {
+    if (first_image_flag) {
         first_image_flag = false;
         first_image_time = img_msg->header.stamp.toSec();
     }
 
     // frequency control, 如果图像频率低于一个值
-    if (round(1.0 * pub_count / (img_msg->header.stamp.toSec() - first_image_time)) <= FREQ)
-    {
+    if (round(1.0 * pub_count / (img_msg->header.stamp.toSec() - first_image_time)) <= FREQ) {
         PUB_THIS_FRAME = true;
         // reset the frequency control
-        if (abs(1.0 * pub_count / (img_msg->header.stamp.toSec() - first_image_time) - FREQ) < 0.01 * FREQ)
-        {
+        if (abs(1.0 * pub_count / (img_msg->header.stamp.toSec() - first_image_time) - FREQ) < 0.01 * FREQ) {
             first_image_time = img_msg->header.stamp.toSec();
             pub_count = 0;
         }
-    }
-    else
+    } else
         PUB_THIS_FRAME = false;
 
     TicToc t_r;
 
-    if (PUB_THIS_FRAME)
-    {
-    cv_bridge::CvImageConstPtr ptr = cv_bridge::toCvCopy(img_msg, sensor_msgs::image_encodings::MONO8);
-    cv::Mat show_img = ptr->image;
+    if (PUB_THIS_FRAME) {
+        cv_bridge::CvImageConstPtr ptr = cv_bridge::toCvCopy(img_msg, sensor_msgs::image_encodings::MONO8);
+        cv::Mat show_img = ptr->image;
 //    cv::imshow("lineimg",show_img);
 //    cv::waitKey(1);
-    
-    frame_cnt++;
-    trackerData.readImage(ptr->image.rowRange(0 , ROW));   // rowRange(i,j) 取图像的i～j行
+
+        frame_cnt++;
+        trackerData.readImage(ptr->image.rowRange(0, ROW));   // rowRange(i,j) 取图像的i～j行
 
         pub_count++;
         sensor_msgs::PointCloudPtr feature_lines(new sensor_msgs::PointCloud);
@@ -68,9 +63,8 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
         feature_lines->header = img_msg->header;
         feature_lines->header.frame_id = "world";
 
-        vector<set<int>> hash_ids(NUM_OF_CAM);
-        for (int i = 0; i < NUM_OF_CAM; i++)
-        {
+        vector <set<int>> hash_ids(NUM_OF_CAM);
+        for (int i = 0; i < NUM_OF_CAM; i++) {
             if (i != 1 || !STEREO_TRACK)  // 单目
             {
                 auto un_lines = trackerData.undistortedLineEndPoints();
@@ -78,8 +72,7 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
                 //auto &cur_lines = trackerData.curframe_->vecLine;
                 auto &ids = trackerData.curframe_->lineID;
 
-                for (unsigned int j = 0; j < ids.size(); j++)
-                {
+                for (unsigned int j = 0; j < ids.size(); j++) {
 
                     int p_id = ids[j];
                     hash_ids[i].insert(p_id);
@@ -106,12 +99,11 @@ void img_callback(const sensor_msgs::ImageConstPtr &img_msg)
 
     }
     sum_time += t_r.toc();
-    mean_time = sum_time/frame_cnt;
+    mean_time = sum_time / frame_cnt;
     // ROS_INFO("whole Line feature tracker processing costs: %f", mean_time);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     ros::init(argc, argv, "linefeature_tracker");
     ros::NodeHandle n("~");
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
@@ -124,7 +116,7 @@ int main(int argc, char **argv)
     ros::Subscriber sub_img = n.subscribe(IMAGE_TOPIC, 100, img_callback);
 
     pub_img = n.advertise<sensor_msgs::PointCloud>("linefeature", 1000);
-    pub_match = n.advertise<sensor_msgs::Image>("linefeature_img",1000);
+    pub_match = n.advertise<sensor_msgs::Image>("linefeature_img", 1000);
     /*
     if (SHOW_TRACK)
         cv::namedWindow("vis", cv::WINDOW_NORMAL);
