@@ -64,9 +64,9 @@ void readParameters(ros::NodeHandle &n) {
 
     fsSettings["output_path"] >> VINS_RESULT_PATH;
     VINS_RESULT_PATH = VINS_FOLDER_PATH + VINS_RESULT_PATH;
-    std::ofstream foutC("/home/healer/EuRoC/PL-VINS/outout/tum_plvins.txt", std::ios::out);
+    std::ofstream foutC("~/catkin_ws/EuRoC/PL-VINS/outout/tum_plvins.txt", std::ios::out);
     foutC.close();
-    std::ofstream foutC1("/home/healer/EuRoC/PL-VINS/outout/evo_plvins.txt", std::ios::out);
+    std::ofstream foutC1("~/catkin_ws/EuRoC/PL-VINS/outout/evo_plvins.txt", std::ios::out);
     foutC1.close();
 
     ACC_N = fsSettings["acc_n"];

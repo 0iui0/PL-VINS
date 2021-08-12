@@ -1,7 +1,7 @@
 project(line-descriptor)
 
-cmake_minimum_required(VERSION 2.7)
-find_package(OpenCV 3 REQUIRED)
+cmake_minimum_required(VERSION 3.0)
+find_package(OpenCV 4 REQUIRED)
 
 if (COMMAND cmake_policy)
     cmake_policy(SET CMP0003 NEW)

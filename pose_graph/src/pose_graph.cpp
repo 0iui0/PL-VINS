@@ -149,7 +149,7 @@ void PoseGraph::addKeyFrame(KeyFrame *cur_kf, bool flag_detect_loop) {
         //       << Q.z() << ","
         //       << endl;
         // loop_path_file.close();
-        ofstream foutC("/home/healer/catkin_PLVINS/src/PL-VINS/Trajactory/tum_fast_plvins_loop.txt", ios::app);
+        ofstream foutC("~/catkin_ws/src/PL-VINS/Trajactory/tum_fast_plvins_loop.txt", ios::app);
         foutC.setf(ios::fixed, ios::floatfield);
         foutC.precision(0);
         foutC << cur_kf->time_stamp * 1e9 << " ";
@@ -164,7 +164,7 @@ void PoseGraph::addKeyFrame(KeyFrame *cur_kf, bool flag_detect_loop) {
               << endl;
         foutC.close();
 
-        ofstream foutC1("/home/healer/catkin_PLVINS/src/PL-VINS/Trajactory/evo_fast_plvins_loop.txt", ios::app);
+        ofstream foutC1("~/catkin_ws/src/PL-VINS/Trajactory/evo_fast_plvins_loop.txt", ios::app);
         foutC1.setf(ios::fixed, ios::floatfield);
         foutC1.precision(9);
         foutC1 << cur_kf->time_stamp << " ";
@@ -308,7 +308,7 @@ int PoseGraph::detectLoop(KeyFrame *keyframe, int frame_index) {
     if (DEBUG_IMAGE) {
         int feature_num = keyframe->keypoints.size();
         cv::resize(keyframe->image, compressed_image, cv::Size(376, 240));
-        putText(compressed_image, "feature_num:" + to_string(feature_num), cv::Point2f(10, 10), CV_FONT_HERSHEY_SIMPLEX,
+        putText(compressed_image, "feature_num:" + to_string(feature_num), cv::Point2f(10, 10), cv::FONT_HERSHEY_SIMPLEX,
                 0.4, cv::Scalar(255));
         image_pool[frame_index] = compressed_image;
     }
@@ -330,7 +330,7 @@ int PoseGraph::detectLoop(KeyFrame *keyframe, int frame_index) {
         loop_result = compressed_image.clone();
         if (ret.size() > 0)
             putText(loop_result, "neighbour score:" + to_string(ret[0].Score), cv::Point2f(10, 50),
-                    CV_FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255));
+                    cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255));
     }
     // visual loop result 
     if (DEBUG_IMAGE) {
@@ -339,7 +339,7 @@ int PoseGraph::detectLoop(KeyFrame *keyframe, int frame_index) {
             auto it = image_pool.find(tmp_index);
             cv::Mat tmp_image = (it->second).clone();
             putText(tmp_image, "index:  " + to_string(tmp_index) + "loop score:" + to_string(ret[i].Score),
-                    cv::Point2f(10, 50), CV_FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255));
+                    cv::Point2f(10, 50), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255));
             cv::hconcat(loop_result, tmp_image, loop_result);
         }
     }
@@ -354,7 +354,7 @@ int PoseGraph::detectLoop(KeyFrame *keyframe, int frame_index) {
                     auto it = image_pool.find(tmp_index);
                     cv::Mat tmp_image = (it->second).clone();
                     putText(tmp_image, "loop score:" + to_string(ret[i].Score), cv::Point2f(10, 50),
-                            CV_FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255));
+                            cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255));
                     cv::hconcat(loop_result, tmp_image, loop_result);
                 }
             }
@@ -385,7 +385,7 @@ void PoseGraph::addKeyFrameIntoVoc(KeyFrame *keyframe) {
     if (DEBUG_IMAGE) {
         int feature_num = keyframe->keypoints.size();
         cv::resize(keyframe->image, compressed_image, cv::Size(376, 240));
-        putText(compressed_image, "feature_num:" + to_string(feature_num), cv::Point2f(10, 10), CV_FONT_HERSHEY_SIMPLEX,
+        putText(compressed_image, "feature_num:" + to_string(feature_num), cv::Point2f(10, 10), cv::FONT_HERSHEY_SIMPLEX,
                 0.4, cv::Scalar(255));
         image_pool[keyframe->index] = compressed_image;
     }

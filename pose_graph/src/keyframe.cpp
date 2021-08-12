@@ -418,11 +418,11 @@ bool KeyFrame::findConnection(KeyFrame *old_kf) {
             }
             cv::Mat notation(50, COL + gap + COL, CV_8UC3, cv::Scalar(255, 255, 255));
             putText(notation, "current frame: " + to_string(index) + "  sequence: " + to_string(sequence),
-                    cv::Point2f(20, 30), CV_FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255), 3);
+                    cv::Point2f(20, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255), 3);
 
             putText(notation,
                     "previous frame: " + to_string(old_kf->index) + "  sequence: " + to_string(old_kf->sequence),
-                    cv::Point2f(20 + COL + gap, 30), CV_FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255), 3);
+                    cv::Point2f(20 + COL + gap, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255), 3);
             cv::vconcat(notation, loop_match_img, loop_match_img);
 
             /*

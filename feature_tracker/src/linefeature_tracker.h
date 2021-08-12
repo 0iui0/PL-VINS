@@ -15,7 +15,7 @@
 // #include <opencv2/line_descriptor.hpp>
 #include <opencv2/features2d.hpp>
 
-#include "line_descriptor_custom.hpp"
+#include "line_descriptor/include/line_descriptor_custom.hpp"
 
 using namespace cv::line_descriptor;
 using namespace std;

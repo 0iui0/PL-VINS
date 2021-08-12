@@ -15,7 +15,7 @@
 #include <fstream>
 #include <string>
 
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 
 #include "ThirdParty/DBoW/TemplatedVocabulary.h"
 #include "ThirdParty/DBoW/TemplatedDatabase.h"
